@@ -9,8 +9,6 @@ BankReception::BankReception() {
     t1->setActive(); // only 1 teller is active initially
 
     tellers.push_back(t1);
-    tellers.push_back(new Teller(2));
-    tellers.push_back(new Teller(3));
 }
 
 BankReception::BankReception(const BankReception& orig) {
@@ -55,20 +53,37 @@ vector<Transaction*> BankReception::getTransactions() {
     return transactions;
 }
 
-bool BankReception::activateTeller() {
-    // get last active teller
-    
-    // set next teller active
-    
-    // return false if all tellers were active, true otherwise
+queue<Event*> BankReception::getEvents() {
+    return events;
 }
 
-bool BankReception::deactivateTeller() {
-    // get last active teller
+bool BankReception::addTeller() {
+    bool activated = false;
+    int current = tellers.size();
     
-    // set teller inactive
+    // no more than 3 tellers can be active
+    if (current < 3) {
+        Teller* t = new Teller(current++);
+        t->setActive();
+
+        tellers.push_back(t);
+        activated = true;
+    }
     
-    // return false if only teller 1 was active, true otherwise
+    return activated;
+}
+
+bool BankReception::removeTeller() {
+    bool removed = false;
+    int current = tellers.size();
+    
+    // at least 1 teller must be active
+    if (current > 1) {
+        tellers.pop_back();
+        removed = true;
+    }
+    
+    return removed;
 }
 
 bool BankReception::addCustomer(Customer* _customer) {
@@ -89,4 +104,19 @@ bool BankReception::addTransaction(Transaction* _transaction) {
     transactions.push_back(_transaction);
 
     return true;
+}
+
+void BankReception::addEvent(Event* e) {
+    events.push(e);
+}
+
+void BankReception::removeEvent() {
+    events.pop();
+}
+
+void BankReception::serveNextCustomer() {
+    if (!customers.empty()) {
+        customers.pop_back();
+    }
+
 }

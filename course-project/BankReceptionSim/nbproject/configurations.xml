@@ -6,6 +6,8 @@
                    projectFiles="true">
       <itemPath>BankReception.h</itemPath>
       <itemPath>Customer.h</itemPath>
+      <itemPath>Event.h</itemPath>
+      <itemPath>EventType.h</itemPath>
       <itemPath>Teller.h</itemPath>
       <itemPath>Transaction.h</itemPath>
       <itemPath>TransactionType.h</itemPath>
@@ -19,6 +21,7 @@
                    projectFiles="true">
       <itemPath>BankReception.cpp</itemPath>
       <itemPath>Customer.cpp</itemPath>
+      <itemPath>Event.cpp</itemPath>
       <itemPath>Teller.cpp</itemPath>
       <itemPath>Transaction.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
@@ -55,6 +58,12 @@
       <item path="Customer.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Customer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Event.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Event.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="EventType.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Teller.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -97,6 +106,12 @@
       <item path="Customer.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Customer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Event.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Event.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="EventType.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Teller.cpp" ex="false" tool="1" flavor2="0">
       </item>

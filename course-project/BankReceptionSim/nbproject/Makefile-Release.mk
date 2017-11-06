@@ -37,6 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/BankReception.o \
 	${OBJECTDIR}/Customer.o \
+	${OBJECTDIR}/Event.o \
 	${OBJECTDIR}/Teller.o \
 	${OBJECTDIR}/Transaction.o \
 	${OBJECTDIR}/main.o
@@ -75,6 +76,11 @@ ${OBJECTDIR}/Customer.o: Customer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Customer.o Customer.cpp
+
+${OBJECTDIR}/Event.o: Event.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Event.o Event.cpp
 
 ${OBJECTDIR}/Teller.o: Teller.cpp
 	${MKDIR} -p ${OBJECTDIR}
