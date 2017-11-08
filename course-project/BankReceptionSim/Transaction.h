@@ -2,24 +2,31 @@
 #ifndef TRANSACTION_H
 #define TRANSACTION_H
 
-#include "Customer.h"
+#include <string>
+//#include "Customer.h"
 #include "TransactionType.h"
+
+using namespace std;
 
 class Transaction {
 public:
-    Transaction(TransactionType _type, Customer* _customer);
+    Transaction(TransactionType _type);
+//    Transaction(TransactionType _type, Customer* _customer);
     Transaction(const Transaction& orig);
     virtual ~Transaction();
     
-    TransactionType getType();
-    Customer* getCustomer();
-    double getDuration();
-    void setDuration(double _duration);
+    string getType();
+//    Customer* getCustomer();
+    int getDuration();
+    void setDuration(int _duration);
+    double getAmount();
+    void setAmount(double _amount);
 
 private:
     TransactionType type;
-    Customer* customer;
-    double duration; // amount of time required to complete the transaction
+//    Customer* customer;
+    int duration; // amount of time required to complete the transaction (minutes)
+    double amount;    
 
 };
 

@@ -1,12 +1,16 @@
 
+#include <iostream>
+#include <iomanip> // setw
 #include "BankReception.h"
 #include "Teller.h"
 
+using namespace std;
+
 BankReception::BankReception() {
     open = false; // bank is closed
-    
+    avgWaitingCustomers = 0;
+    avgWaitingTime = 0;
     Teller* t1 = new Teller(1);
-    t1->setActive(); // only 1 teller is active initially
 
     tellers.push_back(t1);
 }
@@ -45,6 +49,10 @@ vector<Teller*> BankReception::getTellers() {
     return tellers;
 }
 
+vector<Customer*> BankReception::getWaitingCustomers() {
+    return waitingCustomers;
+}
+
 vector<Customer*> BankReception::getCustomers() {
     return customers;
 }
@@ -64,7 +72,6 @@ bool BankReception::addTeller() {
     // no more than 3 tellers can be active
     if (current < 3) {
         Teller* t = new Teller(current++);
-        t->setActive();
 
         tellers.push_back(t);
         activated = true;
@@ -91,7 +98,7 @@ bool BankReception::addCustomer(Customer* _customer) {
         return false;
     }
 
-    customers.push_back(_customer);
+    waitingCustomers.push_back(_customer);
     
     return true;
 }
@@ -114,9 +121,113 @@ void BankReception::removeEvent() {
     events.pop();
 }
 
-void BankReception::serveNextCustomer() {
-    if (!customers.empty()) {
-        customers.pop_back();
+Teller* BankReception::getAvailableTeller() {
+    Teller* teller = NULL;
+    Teller* t;
+
+    // iterate through tellers to get first available teller (not busy)
+    for (std::vector<Teller*>::iterator it = tellers.begin(); it != tellers.end(); ++it) {
+        t = *(it);
+        
+        if (!t->isBusy()) {
+            teller = t;
+        }
+    }
+    
+    return teller;
+}
+
+bool BankReception::serveNextCustomer(int _timestamp) {
+    bool served = false;
+    
+    // if there are waiting customers
+    if (!waitingCustomers.empty()) {
+
+        Teller* teller = getAvailableTeller();
+        
+        // if there's a free desk
+        if (teller != NULL) {
+            cout << endl << "\t free teller at desk #" << teller->getDesk() << endl;
+            // get next waiting customer
+            Customer* c = waitingCustomers.back();
+            waitingCustomers.pop_back();
+            c->setServiceAt(_timestamp);
+
+            cout << "\t customer id: " << c->getId() << endl;
+            cout << "\t transaction: " << c->getTransaction()->getType() << endl;
+            cout << "\t amount: " << c->getTransaction()->getAmount() << endl;
+            cout << "\t time: " << c->getTransaction()->getDuration() << endl;
+            
+            // start teller service
+            teller->startService(c->getTransaction());
+
+            customers.push_back(c);
+            served = true;
+        } else {
+            cout << "\t no free teller: " << endl;
+        }
+
+        // update average waiting customers
+        avgWaitingCustomers = waitingCustomers.size();
     }
 
+    return served;
+}
+
+
+int BankReception::endServices(int _timestamp) {
+    int ended = 0;
+    Customer* cust;
+    Teller* t;
+
+    if (!customers.empty()) {
+        // iterate through customers
+        for (std::vector<Customer*>::iterator it = customers.begin(); it != customers.end(); ++it) {
+            cust = *(it);
+
+            if (cust->getLeaveAt() == 0 && cust->getServiceAt()) {
+                // customer leaves
+                cust->setLeaveAt(_timestamp);
+                ended++;
+                
+                // need to find the teller and free it
+                t = tellers.back();
+                t->endService();
+            }
+        }
+    }
+
+    return ended;
+}
+
+void BankReception::printReport() {
+    Customer* c;
+    int time=182;
+    
+    cout << endl;
+    cout << "-------------------------" << endl;
+    cout << "Customers that came today" << endl;
+    cout << "-------------------------" << endl;
+    cout << setw(3) << "ID";
+    cout << setw(12) << "Last Name";
+    cout << setw(12) << "First Name";
+    cout << setw(12) << "Transaction";
+    cout << setw(10) << "Amount";
+    cout << setw(12) << "Arrived At";
+    cout << setw(10) << "Avg.Wait";
+    cout << setw(20) << "Customers Waiting";
+    cout << endl;
+    for (std::vector<Customer*>::iterator it = customers.begin(); it != customers.end(); ++it) {
+        c = *(it);
+        cout << setw(3) << c->getId();
+        cout << setw(12) << c->getLastName();
+        cout << setw(12) << c->getFirstName();
+        cout << setw(12) << c->getTransaction()->getType();
+        cout << setw(10) << c->getTransaction()->getAmount();
+        cout << setw(12) << c->getEnterAt();
+        cout << setw(10) << c->getWaitingTime();
+        cout << setw(20) << avgWaitingCustomers;
+        cout << endl;
+    }
+    
 }

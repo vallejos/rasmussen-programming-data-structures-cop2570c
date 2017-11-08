@@ -1,9 +1,11 @@
 
+#include <cstdlib>
 #include "Teller.h"
 
 Teller::Teller(int _desk) {
     desk = _desk;
-    active = false;
+    busy = false;
+    transaction = NULL;
 }
 
 Teller::Teller(const Teller& orig) {
@@ -16,14 +18,16 @@ int Teller::getDesk() {
     return desk;
 }
 
-bool Teller::isActive() {
-    return active;
+bool Teller::isBusy() {
+    return busy;
 }
 
-void Teller::setActive() {
-    active = true;
+void Teller::startService(Transaction* t) {
+    busy = true;
+    transaction = t;
 }
 
-void Teller::setInactive() {
-    active = false;
+void Teller::endService() {
+    busy = false;
+    transaction = NULL;
 }

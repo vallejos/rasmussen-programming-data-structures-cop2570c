@@ -51,6 +51,61 @@ void printMenuOptions() {
 }
 
 /**
+ * Swaps 2 elements in an array.
+ * @param data
+ * @param i
+ * @param j
+ */
+void swap(int* data, int i, int j) {
+    int temp = data[i];
+    data[i] = data[j];
+    data[j] = temp;
+}
+
+/**
+ * Sorts the array using quick sort algorithm.
+ * @param data
+ * @param first
+ * @param last
+ * @param approach
+ * @return
+ */
+void quickSort(int* data, int first, int last, int approach) {
+    int i = first;
+    int j = last;
+    
+    // get pivot
+    int pivot = (first + last) / 2;
+
+    while (i <= j) {
+
+        while (data[i] < data[pivot]) {
+            i++;
+        }
+
+        while (data[j] > data[pivot]) {
+            j--;
+        }
+
+        if (i <= j) {
+            swap(data, i, j);
+            i++;
+            j--;
+        }
+    }
+
+    if (j > first) {
+        // Sort the left half. 
+        quickSort(data, first, j, approach);
+    }
+
+    if (i < last) {
+        // Sort the right half. 
+        quickSort(data, i, last, approach);
+    }
+}
+
+/**
  * Returns random int between min and max
  * @param min
  * @param max
@@ -58,6 +113,10 @@ void printMenuOptions() {
  */
 int getRandomInt(int min, int max) {
     return min + (static_cast<int>(rand() % (max - min + 1)));
+}
+
+double getRandomDouble(int min, int max) {
+    return min + (static_cast<double>(rand() % (max - min + 1)));
 }
 
 /**
@@ -101,7 +160,9 @@ TransactionType getRandomTransactionType() {
  * @return 
  */
 string getRandomFirstName() {
-    return "Jon"; // @todo: make it random
+    array<string, 9> names = {"Jon", "Sansa", "Khal", "Paul", "Tyrion", "Daenerys", "Arya", "Eddard", "Gregor"};
+
+    return names[getRandomInt(0, 8)];
 }
 
 /**
@@ -109,7 +170,9 @@ string getRandomFirstName() {
  * @return 
  */
 string getRandomLastName() {
-    return "Snow"; // @todo: make it random
+    array<string, 9> names = {"Snow", "Smith", "Black", "Lannister", "Stark", "Baelish", "Targaryen", "Baratheon", "Drogo"};
+
+    return names[getRandomInt(0, 8)];
 }
 
 /**
@@ -117,9 +180,12 @@ string getRandomLastName() {
  * @param reception
  */
 void printStatistics(BankReception* reception) {
-    cout << endl << endl << "Statistics" << endl;
+    cout << endl << endl << "Statistics for Last Simulation" << endl;
     cout << "--------------------------------------" << endl;
-    // @todo: print all stats collected here
+    
+    reception->printReport();
+    
+    cout << endl << endl;
 }
 
 /**
@@ -131,141 +197,173 @@ void simulate(BankReception* reception, int& currentTime, bool debug) {
     // declare some variables
     Customer* cust;
     Transaction* tr;
-    int custId;
+    bool dispatch = false;
+
+    if (debug)
+        cout << "[" << currentTime << "] events:" << reception->getEvents().size()
+                << ", waiting customers:" << reception->getWaitingCustomers().size()
+                << ", served customers:" << reception->getCustomers().size()
+                << ", tellers:" << reception->getTellers().size()
+                << endl;
     
     // dispatch any existing event
     if (!reception->getEvents().empty()) {
         // get next event
         Event* e = reception->getEvents().front();
 
-        if (debug)
-            cout << " [events:" << reception->getEvents().size()
-                    << ", customers:" << reception->getCustomers().size()
-                    << ", tellers:" << reception->getTellers().size()
-                    << "]" << endl;
-        
         switch (e->getType()) {
             case EventType::BANK_OPEN:
                 if (debug)
-                    cout << "< opening";
+                    cout << "< opening" << endl;
                 reception->setOpen();
+                dispatch = true;
                 break;
 
             case EventType::BANK_CLOSE:
                 if (debug)
-                    cout << "< closing";
+                    cout << "< closing" << endl;
                 reception->setClose();
+                dispatch = true;
                 break;
 
             case EventType::CUSTOMER_ENTER:
                 if (debug)
-                    cout << "< add customer";
-                custId = reception->getCustomers().size() + 1;
-                // generate a test customer
-                cust = new Customer(custId, getRandomFirstName(), getRandomLastName());
+                    cout << "< adding customer" << endl;
 
                 // generate test transaction
-                tr = new Transaction(getRandomTransactionType(), cust);
+                tr = new Transaction(getRandomTransactionType());
                 tr->setDuration(getRandomTransactionDuration());
-                
+                tr->setAmount(getRandomDouble(1, 100));
+
+                // generate a test customer
+                cust = new Customer(getRandomInt(100, 900), getRandomFirstName(), getRandomLastName());
+                cust->setEnterAt(currentTime);
+                cust->setTransaction(tr); // add transaction to customer
+
                 // add customer to bank
                 if (reception->addCustomer(cust)) {
                     // add transaction to bank
                     reception->addTransaction(tr);
                 }
+                dispatch = true;
 
                 break;
 
             case EventType::CUSTOMER_SERVE:
                 if (debug)
-                    cout << "< serve customer";
-                // @todo: handle parallel processing?
-                reception->serveNextCustomer();
-
+                    cout << "< serving customer: ";
+                
+                if (reception->serveNextCustomer(currentTime)) {
+                    dispatch = true;
+                    if (debug)
+                        cout << "done!" << endl;
+                } else {
+                    if (debug)
+                        cout << "no free desk. Waiting." << endl;
+                }
+                
                 break;
 
             case EventType::CUSTOMER_LEAVE:
+                if (debug)
+                    cout << "< leaving customer" << endl;
+                dispatch = true;
                 break;
 
             case EventType::TELLER_ADD:
                 if (debug)
-                    cout << "< add teller";
-                reception->addTeller();
+                    cout << "< adding teller" << endl;
+                if (reception->addTeller()) {
+                    dispatch = true;
+                }
+
                 break;
                 
 
             case EventType::TELLER_REMOVE:
                 if (debug)
-                    cout << "< remove teller";
+                    cout << "< removing teller" << endl;
                 reception->removeTeller();
+                dispatch = true;
                 break;
             
         }
 
-        e->dispatch(currentTime);
+        if (dispatch) {
+            e->dispatch(currentTime);
 
-        // remove event from the queue
-        reception->removeEvent();
+            // remove event from the queue
+            reception->removeEvent();
+        }
 
     }
 
     // time to open bank
     if (currentTime >= OPEN_TIME && currentTime < CLOSE_TIME && !reception->isOpen()) {
         if (debug)
-            cout << "> opening" << endl;
+            cout << "+ open" << endl;
         reception->addEvent(new Event(EventType::BANK_OPEN, currentTime));
     }
 
     // time to close bank
     if (currentTime >= CLOSE_TIME && reception->isOpen()) {
         if (debug)
-            cout << "> closing" << endl;
+            cout << "+ close" << endl;
         reception->addEvent(new Event(EventType::BANK_CLOSE, currentTime));
     }
 
     // add 2nd teller if more than 4 customers are active and only 1 teller is active
-    if (reception->getCustomers().size() >= 4 && reception->getTellers().size() == 1) {
+    if (reception->getWaitingCustomers().size() >= 4 && reception->getTellers().size() == 1) {
         if (debug)
-            cout << "> add teller 2" << endl;
+            cout << "+ add teller 2" << endl;
         reception->addEvent(new Event(EventType::TELLER_ADD, currentTime));
     }
 
     // add 3rd teller if more than 8 customers are waiting and only 2 tellers are active
-    if (reception->getCustomers().size() >= 8 && reception->getTellers().size() == 2) {
+    if (reception->getWaitingCustomers().size() >= 8 && reception->getTellers().size() == 2) {
         if (debug)
-            cout << "> add teller 3" << endl;
+            cout << "+ add teller 3" << endl;
         reception->addEvent(new Event(EventType::TELLER_ADD, currentTime));
     }
     
     // remove 3rd teller when less than 8 customers are waiting and 3 tellers are active
-    if (reception->getCustomers().size() < 8 && reception->getTellers().size() == 3) {
+    if (reception->getWaitingCustomers().size() < 8 && reception->getTellers().size() == 3) {
         if (debug)
-            cout << "> remove teller 3" << endl;
+            cout << "+ remove teller 3" << endl;
         reception->addEvent(new Event(EventType::TELLER_REMOVE, currentTime));
     }
 
     // remove 2nd teller when less than 4 customers are waiting and 2 tellers are active
-    if (reception->getCustomers().size() < 4 && reception->getTellers().size() == 2) {
+    if (reception->getWaitingCustomers().size() < 4 && reception->getTellers().size() == 2) {
         if (debug)
-            cout << "> remove teller 2" << endl;
+            cout << "+ remove teller 2" << endl;
         reception->addEvent(new Event(EventType::TELLER_REMOVE, currentTime));
     }
     
     // customer enters? 60% chance a customer will enter
     if (getRandomInt(1, 10) >= 6 && reception->isOpen()) {
         if (debug)
-            cout << "> add customer" << endl;
+            cout << "+ add customer" << endl;
         // the chance that a customer will enter the bank must be at least 60%
         reception->addEvent(new Event(EventType::CUSTOMER_ENTER, currentTime));
     }
     
     // if any customer is waiting, a teller must serve it
-    if (reception->getCustomers().size() > 0) {
+    if (reception->getWaitingCustomers().size() > 0) {
         if (debug)
-            cout << "> serve customer"<< endl;
+            cout << "+ serve customer"<< endl;
         reception->addEvent(new Event(EventType::CUSTOMER_SERVE, currentTime));
     }
 
+    // check if a customer transaction is complete
+    if (reception->getCustomers().size() > 0) {
+        if (reception->endServices(currentTime) > 0) {
+            if (debug)
+                cout << "+ leave customer"<< endl;
+            reception->addEvent(new Event(EventType::CUSTOMER_LEAVE, currentTime));
+        }
+    }
+    
 }
 
 /**
@@ -278,7 +376,8 @@ void simulate(BankReception* reception, int& currentTime, bool debug) {
  */
 void startSimulation(BankReception* reception, int& currentTime) {
     // while it's working time or there are still events queued
-    while (currentTime <= CLOSE_TIME || reception->getEvents().size() > 0) {
+//    while (currentTime <= CLOSE_TIME || reception->getEvents().size() > 0) {
+    while (currentTime <= CLOSE_TIME) {
         simulate(reception, currentTime, true);
         currentTime++;
     }
@@ -295,7 +394,7 @@ int main(int argc, char** argv) {
     // declare some variables
     bool exitApp = false;
     int choice = 0;
-    BankReception* reception = new BankReception(); // initialize the bank reception
+    BankReception* reception; // initialize the bank reception
     int currentTime = 0; // start time is 0
 
     // main loop: repeat until user wants to exit the program
@@ -312,6 +411,8 @@ int main(int argc, char** argv) {
                 currentTime = 0;
                 cout << endl << "Simulation Started. Current time is: " << currentTime << endl;
 
+                reception = new BankReception();
+                
                 // start simulation
                 startSimulation(reception, currentTime);
 

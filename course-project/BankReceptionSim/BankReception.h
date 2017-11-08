@@ -18,6 +18,7 @@ public:
     virtual ~BankReception();
 
     vector<Teller*> getTellers();
+    vector<Customer*> getWaitingCustomers();
     vector<Customer*> getCustomers();
     vector<Transaction*> getTransactions();
     queue<Event*> getEvents();
@@ -31,15 +32,22 @@ public:
     bool addTransaction(Transaction* _transaction);
     void addEvent(Event* e);
     void removeEvent();
-    void serveNextCustomer();
+    bool serveNextCustomer(int _timestamp);
+    Teller* getAvailableTeller();
+    int endServices(int _timestamp);
 
+    void printReport();
+    
 private:
     bool open; // open from 10am to 1pm
     vector<Teller*> tellers; // list of tellers
+    vector<Customer*> waitingCustomers; // list of customers
     vector<Customer*> customers; // list of customers
     vector<Transaction*> transactions; // list of customers
     queue<Event*> events; // queue of events
-
+    double avgWaitingCustomers;
+    double avgWaitingTime;
+            
 };
 
 #endif /* BANKRECEPTION_H */
